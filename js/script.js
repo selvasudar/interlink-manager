@@ -3,6 +3,7 @@ jQuery(document).ready(function($) {
         console.log('Approve link clicked');
         e.preventDefault();
         var rowId = $(this).data('id');
+
         $.ajax({
             url: interlinkAjax.ajaxurl,
             type: 'POST',
@@ -15,15 +16,19 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     var positions = response.data.positions;
                     var html = '';
-                    positions.forEach(function(pos, index) {
-                        html += '<div class="keyword-option">';
-                        html += '<input type="checkbox" class="keyword-checkbox" data-offset="' + pos.offset + '" checked>';
-                        html += '<span>' + pos.context.replace(response.data.keyword, '<strong>' + response.data.keyword + '</strong>') + '</span>';
+                    positions.forEach(function(pos) {
+                        html += '<div class="form-check mb-2">';
+                        html += '<input class="form-check-input keyword-checkbox" type="checkbox" data-offset="' + pos.offset + '" checked>';
+                        html += '<label class="form-check-label">' + 
+                                pos.context.replace(response.data.keyword, '<strong>' + response.data.keyword + '</strong>') + 
+                                '</label>';
                         html += '</div>';
                     });
                     $('#keyword-options').html(html);
-                    $('#keyword-popup').show().addClass('active');
-                    $('body').append('<div class="overlay"></div>');
+
+                    // Show the Bootstrap modal
+                    var keywordModal = new bootstrap.Modal(document.getElementById('keywordModal'));
+                    keywordModal.show();
 
                     $('#confirm-links').off('click').on('click', function() {
                         var selectedPositions = [];
@@ -32,6 +37,7 @@ jQuery(document).ready(function($) {
                                 offset: $(this).data('offset')
                             });
                         });
+
                         $.ajax({
                             url: interlinkAjax.ajaxurl,
                             type: 'POST',
@@ -50,27 +56,14 @@ jQuery(document).ready(function($) {
                                     location.reload();
                                 } else {
                                     alert('Error: ' + res.data);
-                                    $('.overlay').remove();
-                                    $('#keyword-popup').hide().removeClass('active');
+                                    keywordModal.hide();
                                 }
                             },
                             error: function() {
                                 alert('An error occurred while processing your request.');
-                                $('.overlay').remove();
-                                $('#keyword-popup').hide().removeClass('active');
+                                keywordModal.hide();
                             }
                         });
-                    });
-
-                    $('#cancel-popup').on('click', function() {
-                        $('#keyword-popup').hide().removeClass('active');
-                        $('.overlay').remove();
-                    });
-
-                    // Close popup when clicking on overlay
-                    $(document).on('click', '.overlay', function() {
-                        $('#keyword-popup').hide().removeClass('active');
-                        $('.overlay').remove();
                     });
                 } else {
                     alert('Error: ' + response.data);

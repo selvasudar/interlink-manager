@@ -31,9 +31,7 @@ function interlink_manager_menu() {
 
 // Enqueue scripts and styles
 add_action('admin_enqueue_scripts', 'interlink_manager_enqueue_scripts');
-add_action('admin_enqueue_scripts', function () {
-    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css');
-});
+
 
 function interlink_manager_enqueue_scripts($hook) {
     if ($hook !== 'toplevel_page_interlink-manager') {
@@ -55,6 +53,9 @@ function interlink_manager_enqueue_scripts($hook) {
 function interlink_manager_page() {
     ?>
     <div class="container mt-5">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
         <h1 class="mb-4 title">Interlink Manager</h1>
 
         <form method="post" enctype="multipart/form-data" class="mb-4">
