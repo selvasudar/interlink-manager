@@ -31,6 +31,10 @@ function interlink_manager_menu() {
 
 // Enqueue scripts and styles
 add_action('admin_enqueue_scripts', 'interlink_manager_enqueue_scripts');
+add_action('admin_enqueue_scripts', function () {
+    wp_enqueue_style('bootstrap-css', 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css');
+});
+
 function interlink_manager_enqueue_scripts($hook) {
     if ($hook !== 'toplevel_page_interlink-manager') {
         return;
@@ -48,16 +52,112 @@ function interlink_manager_enqueue_scripts($hook) {
 }
 
 // Main admin page
+// function interlink_manager_page() {
+//     ?>
+//     <div class="wrap">
+//         <h1 class="title">Interlink Manager</h1>
+//         <form method="post" enctype="multipart/form-data">
+//             <input type="file" name="interlink_csv" accept=".csv" required>
+//             <input type="submit" name="upload_csv" value="Upload CSV" class="button button-primary">
+//         </form>
+//         <?php
+//         // Handle CSV upload
+//         if (isset($_POST['upload_csv']) && !empty($_FILES['interlink_csv']['tmp_name'])) {
+//             $file = $_FILES['interlink_csv']['tmp_name'];
+//             $rows = array_map('str_getcsv', file($file));
+//             $header = array_shift($rows);
+//             $expected_headers = array('source_url', 'destination_url', 'keyword');
+//             if ($header === $expected_headers) {
+//                 global $wpdb;
+//                 $table_name = $wpdb->prefix . 'interlink_data';
+//                 $wpdb->query("TRUNCATE TABLE $table_name");
+//                 foreach ($rows as $row) {
+//                     $wpdb->insert($table_name, array(
+//                         'source_url' => esc_url_raw($row[0]),
+//                         'destination_url' => esc_url_raw($row[1]),
+//                         'keyword' => sanitize_text_field($row[2]),
+//                         'status' => 'pending'
+//                     ));
+//                 }
+//                 echo '<div class="notice notice-success"><p>CSV uploaded successfully!</p></div>';
+//             } else {
+//                 echo '<div class="notice notice-error"><p>Invalid CSV format. Expected headers: source_url, destination_url, keyword</p></div>';
+//             }
+//         }
+
+//         // Display table
+//         global $wpdb;
+//         $table_name = $wpdb->prefix . 'interlink_data';
+        
+//         // Check if table exists before querying
+//         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
+        
+//         if ($table_exists) {
+//             $results = $wpdb->get_results("SELECT * FROM $table_name");
+//             if ($results) {
+//                 ?>
+//                 <table class="wp-list-table widefat fixed striped">
+//                     <thead>
+//                         <tr>
+//                             <th>Source URL</th>
+//                             <th>Destination URL</th>
+//                             <th>Keyword</th>
+//                             <th>Status</th>
+//                             <th>Action</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>
+//                         <?php foreach ($results as $row) : ?>
+//                             <tr data-id="<?php echo esc_attr($row->id); ?>">
+//                                 <td><?php echo esc_url($row->source_url); ?></td>
+//                                 <td><?php echo esc_url($row->destination_url); ?></td>
+//                                 <td><?php echo esc_html($row->keyword); ?></td>
+//                                 <td><?php echo esc_html($row->status); ?></td>
+//                                 <td>
+//                                     <?php if ($row->status === 'pending') : ?>
+//                                         <button class="button approve-link" data-id="<?php echo esc_attr($row->id); ?>">Approve</button>
+//                                     <?php endif; ?>
+//                                 </td>
+//                             </tr>
+//                         <?php endforeach; ?>
+//                     </tbody>
+//                 </table>
+                
+//                 <!-- Improved popup structure -->
+//                 <div id="keyword-popup" style="display:none;">
+//                     <h2>Select Keyword Positions</h2>
+//                     <div id="keyword-options"></div>
+//                     <div class="button-container">
+//                         <button id="confirm-links" class="button button-primary">Confirm</button>
+//                         <button id="cancel-popup" class="button">Cancel</button>
+//                     </div>
+//                 </div>
+//                 <?php
+//             } else {
+//                 echo '<div class="notice notice-info"><p>No interlinking data found. Please upload a CSV file.</p></div>';
+//             }
+//         } else {
+//             echo '<div class="notice notice-error"><p>Database table not found. Please deactivate and reactivate the plugin.</p></div>';
+//         }
+//         ?>
+//     </div>
+//     <?php
+// }
+
 function interlink_manager_page() {
     ?>
-    <div class="wrap">
-        <h1>Interlink Manager</h1>
-        <form method="post" enctype="multipart/form-data">
-            <input type="file" name="interlink_csv" accept=".csv" required>
-            <input type="submit" name="upload_csv" value="Upload CSV" class="button button-primary">
+    <div class="container mt-5">
+        <h1 class="mb-4 title">Interlink Manager</h1>
+
+        <form method="post" enctype="multipart/form-data" class="mb-4">
+            <div class="mb-3">
+                <label for="interlink_csv" class="form-label">Upload CSV File</label>
+                <input type="file" class="form-control" name="interlink_csv" id="interlink_csv" accept=".csv" required>
+            </div>
+            <button type="submit" name="upload_csv" class="btn btn-primary">Upload CSV</button>
         </form>
+
         <?php
-        // Handle CSV upload
         if (isset($_POST['upload_csv']) && !empty($_FILES['interlink_csv']['tmp_name'])) {
             $file = $_FILES['interlink_csv']['tmp_name'];
             $rows = array_map('str_getcsv', file($file));
@@ -75,25 +175,22 @@ function interlink_manager_page() {
                         'status' => 'pending'
                     ));
                 }
-                echo '<div class="notice notice-success"><p>CSV uploaded successfully!</p></div>';
+                echo '<div class="alert alert-success">CSV uploaded successfully!</div>';
             } else {
-                echo '<div class="notice notice-error"><p>Invalid CSV format. Expected headers: source_url, destination_url, keyword</p></div>';
+                echo '<div class="alert alert-danger">Invalid CSV format. Expected headers: source_url, destination_url, keyword</div>';
             }
         }
 
-        // Display table
         global $wpdb;
         $table_name = $wpdb->prefix . 'interlink_data';
-        
-        // Check if table exists before querying
         $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'");
-        
+
         if ($table_exists) {
             $results = $wpdb->get_results("SELECT * FROM $table_name");
             if ($results) {
                 ?>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
+                <table class="table table-striped table-bordered">
+                    <thead class="table-dark">
                         <tr>
                             <th>Source URL</th>
                             <th>Destination URL</th>
@@ -105,40 +202,54 @@ function interlink_manager_page() {
                     <tbody>
                         <?php foreach ($results as $row) : ?>
                             <tr data-id="<?php echo esc_attr($row->id); ?>">
-                                <td><?php echo esc_url($row->source_url); ?></td>
-                                <td><?php echo esc_url($row->destination_url); ?></td>
+                                <td><a href="<?php echo esc_url($row->source_url); ?>" target="_blank"><?php echo esc_url($row->source_url); ?></a></td>
+                                <td><a href="<?php echo esc_url($row->destination_url); ?>" target="_blank"><?php echo esc_url($row->destination_url); ?></a></td>
                                 <td><?php echo esc_html($row->keyword); ?></td>
-                                <td><?php echo esc_html($row->status); ?></td>
+                                <td>
+                                    <span class="badge <?php echo $row->status === 'pending' ? 'bg-warning text-dark' : 'bg-success'; ?>">
+                                        <?php echo esc_html($row->status); ?>
+                                    </span>
+                                </td>
                                 <td>
                                     <?php if ($row->status === 'pending') : ?>
-                                        <button class="button approve-link" data-id="<?php echo esc_attr($row->id); ?>">Approve</button>
+                                        <button class="btn btn-sm btn-success approve-link" data-id="<?php echo esc_attr($row->id); ?>">Approve</button>
                                     <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
-                
-                <!-- Improved popup structure -->
-                <div id="keyword-popup" style="display:none;">
-                    <h2>Select Keyword Positions</h2>
-                    <div id="keyword-options"></div>
-                    <div class="button-container">
-                        <button id="confirm-links" class="button button-primary">Confirm</button>
-                        <button id="cancel-popup" class="button">Cancel</button>
+
+                <!-- Popup Modal -->
+                <div class="modal fade" id="keywordModal" tabindex="-1" aria-labelledby="keywordModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="keywordModalLabel">Select Keyword Positions</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="keyword-options">
+                                <!-- Keyword options dynamically added here -->
+                            </div>
+                            <div class="modal-footer">
+                                <button id="confirm-links" class="btn btn-primary">Confirm</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <?php
             } else {
-                echo '<div class="notice notice-info"><p>No interlinking data found. Please upload a CSV file.</p></div>';
+                echo '<div class="alert alert-info">No interlinking data found. Please upload a CSV file.</div>';
             }
         } else {
-            echo '<div class="notice notice-error"><p>Database table not found. Please deactivate and reactivate the plugin.</p></div>';
+            echo '<div class="alert alert-danger">Database table not found. Please deactivate and reactivate the plugin.</div>';
         }
         ?>
     </div>
     <?php
 }
+
 
 // Create database table on plugin activation
 register_activation_hook(__FILE__, 'interlink_manager_activate');

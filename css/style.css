@@ -100,3 +100,8 @@
 #confirm-links {
     margin-right: 10px;
 }
+ h1.title{
+    font-weight: bold;
+    text-align: center;
+    font-size: 40px;
+}
